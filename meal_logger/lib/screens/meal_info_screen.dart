@@ -1,8 +1,18 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../blocs/app_bloc.dart';
+import '../dtos/meal.dart';
+
 class MealInfoScreen extends StatefulWidget {
+  final Meal _meal;
+  final AppBloc appBloc = GetIt.I<AppBloc>();
+
+  MealInfoScreen(this._meal, {super.key});
+
   @override
   State<MealInfoScreen> createState() => _MealInfoScreenState();
 }
@@ -12,7 +22,8 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: const Text('料理を新規追加'), leading: IconButton(icon: const Icon(Icons.arrow_back),onPressed: () {Navigator.pop(context);})),
+      appBar: AppBar(title: const Text('料理を新規追加'),
+          leading: IconButton(icon: const Icon(Icons.arrow_back),onPressed: () {Navigator.pop(context);})),
       body: SafeArea(
         child: Column(
           children: [
@@ -32,7 +43,16 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                               child: const Center(child: Text('No Image', textScaleFactor: 2.5, style: TextStyle(color: Colors.grey))),
                             )
                           ),
-                          IconButton(onPressed: (){}, icon: const Icon(Icons.add_photo_alternate))
+                          IconButton(
+                            onPressed: () async {
+                                FilePickerResult? result = await FilePicker.platform.pickFiles();
+                                if (result != null) {
+
+                                } else {
+                                  // User canceled the picker
+                                }
+                              },
+                            icon: const Icon(Icons.add_photo_alternate))
                         ]
                       )
                     ),
@@ -43,7 +63,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             const Text('料理名：', textScaleFactor: 1.5),
-                            TextFormField(initialValue: 'サンプル',)
+                            TextFormField(initialValue: widget._meal.name, onChanged: (text) {widget._meal.name = text;})
                           ],
                         )
                     ),
@@ -53,31 +73,41 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          const Text('参考URL：', textScaleFactor: 1.5),
-                          ListView(
+                          Row(children: [
+                            const Text('参考URL：', textScaleFactor: 1.5),
+                            const Spacer(),
+                            IconButton(onPressed: () {
+                                setState(() {
+                                  widget._meal.refUrls.add('');
+                                });
+                              }, icon: const Icon(Icons.add))]),
+                          ListView.builder(
+                            itemCount: widget._meal.refUrls.length,
                             physics: NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
-                            children: [
-                              Container(
-                                  decoration: BoxDecoration(border: Border(bottom: BorderSide())),
-                                  child: ListTile(
-                                      title: TextFormField(initialValue: 'サンプル'),
-                                      trailing: IconButton(
-                                          onPressed: () async {
-                                            final url = Uri.parse(
-                                              'https://www.youtube.com/',
-                                            );
-                                            if (await canLaunchUrl(url)) {
-                                              launchUrl(url);
-                                            } else {
-                                              // ignore: avoid_print
-                                              print("Can't launch $url");
-                                            }
-                                          },
-                                          icon: const Icon(Icons.search))
-                                  )
-                              ),
-                            ],
+                            itemBuilder: (BuildContext context, int index) {
+                              return Container(
+                                decoration: BoxDecoration(border: Border(bottom: BorderSide())),
+                                child: ListTile(
+                                  title: TextFormField(
+                                    initialValue: widget._meal.refUrls[index],
+                                    onChanged: (text) {widget._meal.refUrls[index] = text;}),
+                                  trailing: IconButton(
+                                    onPressed: () async {
+                                      final url = Uri.parse(
+                                        widget._meal.refUrls[index],
+                                      );
+                                      if (await canLaunchUrl(url)) {
+                                        launchUrl(url);
+                                      } else {
+                                        // ignore: avoid_print
+                                        print("Can't launch $url");
+                                      }
+                                    },
+                                    icon: const Icon(Icons.search))
+                                )
+                              );
+                            }
                           )
                         ],
                       )
@@ -93,7 +123,9 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size.fromHeight(50), // fromHeight use double.infinity as width and 40 is the height
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    widget.appBloc.addMeal();
+                  },
                   child: Text('保存する'),
                 )
             )

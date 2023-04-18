@@ -2,12 +2,21 @@ import 'package:meal_logger/databases/database.dart';
 
 class Meal {
   int? id;
-  String name = "";
-  DateTime lastCookedDate;
-  DateTime createdAt;
+  String name;
+  DateTime? lastCookedDate;
+  DateTime? createdAt;
   List<String> refUrls = [];
-  String imagePath = "";
+  final String imagePath;
+
+  // 保存する料理写真の一時パス
+  String savedImgTmpPath;
 
   // idを指定しない場合、新規追加になる
-  Meal(this.name, this.lastCookedDate, this.createdAt, {this.id, required this.imagePath, required this.refUrls});
+  Meal({this.id,
+        this.name = "",
+        this.lastCookedDate,
+        this.createdAt,
+        List<String>? refUrls,
+        this.imagePath = "",
+        this.savedImgTmpPath = ""}) : refUrls = refUrls ?? [];
 }

@@ -39,7 +39,7 @@ class _MainScreenState extends State<MainScreen> {
         tabBuilder: (context, index) {
           return CupertinoTabView(builder: (context) {
             return CupertinoPageScaffold(
-                child: _pageWidgets[index]
+              child: _pageWidgets[index]
             );
           });
         },
