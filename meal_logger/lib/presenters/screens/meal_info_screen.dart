@@ -7,8 +7,8 @@ import 'package:get_it/get_it.dart';
 import 'package:meal_logger/dtos/meal_ref_url.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../blocs/app_bloc.dart';
-import '../dtos/meal.dart';
+import '../../blocs/app_bloc.dart';
+import '../../dtos/meal.dart';
 
 class MealInfoScreen extends StatefulWidget {
   final Meal _meal;
@@ -44,8 +44,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
               SingleChildScrollView(
                 child: Column(
                   children: [
-                    Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.black)),
+                    Container(decoration: const BoxDecoration(color: Colors.black),
                       child: Stack(
                         children: <Widget>[
                           AspectRatio(
@@ -55,7 +54,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                               child: Center(
                                   child: widget._mealPicture != null ?
                                     Image.file(widget._mealPicture!) :
-                                    const Text('No Image', textScaleFactor: 2.5, style: TextStyle(color: Colors.grey))
+                                    const Text('No Image', textScaleFactor: 2.5, style: TextStyle(color: Colors.white))
                               ),
                             )
                           ),
@@ -70,7 +69,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                                   // User canceled the picker
                                 }
                               },
-                            icon: const Icon(Icons.add_photo_alternate))
+                            icon: const Icon(Icons.add_photo_alternate, color: Colors.white))
                         ]
                       )
                     ),

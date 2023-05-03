@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:meal_logger/screens/meal_list_screen.dart';
-import 'package:meal_logger/screens/menu_log_screen.dart';
-import 'package:meal_logger/screens/today_menu_screen.dart';
+import 'package:meal_logger/presenters/screens/today_menu_screen.dart';
+
+import 'meal_list_screen.dart';
+import 'menu_log_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

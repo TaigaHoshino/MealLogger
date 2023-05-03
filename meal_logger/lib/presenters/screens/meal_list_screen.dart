@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:meal_logger/screens/meal_info_screen.dart';
+import 'package:meal_logger/presenters/components/meal_list_item_component.dart';
 
-import '../blocs/app_bloc.dart';
-import '../dtos/meal.dart';
-import '../states/loading_state.dart';
+import '../../blocs/app_bloc.dart';
+import '../../dtos/meal.dart';
+import '../../states/loading_state.dart';
+import 'meal_info_screen.dart';
 
 class MealListScreen extends StatefulWidget {
   final AppBloc appBloc = GetIt.I<AppBloc>();
@@ -29,10 +30,11 @@ class _MealListScreenState extends State<MealListScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('料理リスト'),
         actions: <Widget>[
-          IconButton(onPressed: (){
+          IconButton(
+            onPressed: (){
               transitionToMealInfoScreen(mealInit);
             },
-          icon: const Icon(Icons.add))]),
+            icon: const Icon(Icons.add))]),
       body: StreamBuilder<LoadingState<List<Meal>>>(
         stream: widget.appBloc.mealList,
         builder: (context, snapshot){
@@ -48,11 +50,11 @@ class _MealListScreenState extends State<MealListScreen> {
                 itemCount: content.length,
                 itemBuilder: (context, index) {
                   final meal = content.elementAt(index);
-                  return ListTile(
-                    title: Text(meal.name),
-                    onTap: (){
-                      transitionToMealInfoScreen(meal);
-                  },);
+                  return GestureDetector(
+                    child: MealListItemComponent(
+                        meal,
+                        onTap: () {transitionToMealInfoScreen(meal);}),
+                  );
                 },
               )
             },
