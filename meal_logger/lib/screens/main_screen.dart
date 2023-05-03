@@ -16,7 +16,7 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   final _pageWidgets = [
     const TodayMenuScreen(),
-    const MealListScreen(),
+    MealListScreen(),
     const MenuLogScreen()
   ];
 

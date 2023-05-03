@@ -1,12 +1,56 @@
-import 'package:meal_logger/repositories/app_repository.dart';
+import 'dart:io';
+
+import 'package:meal_logger/repositories/meal_repository.dart';
+import 'package:meal_logger/states/loading_state.dart';
+import 'package:rxdart/rxdart.dart';
+
+import '../dtos/meal.dart';
 
 class AppBloc {
-  AppRepository appRepository;
+  final MealRepository _mealRepository;
 
-  AppBloc(this.appRepository);
+  final _mealSaveProgressController = BehaviorSubject<LoadingState<Meal>>();
 
-  void addMeal() {
+  final _mealListController = BehaviorSubject<LoadingState<List<Meal>>>.seeded(const LoadingState.completed([]));
 
+  Stream<LoadingState<Meal>> get onMealSaveProgress => _mealSaveProgressController.stream;
+
+  Stream<LoadingState<List<Meal>>> get mealList => _mealListController.stream;
+
+  AppBloc(this._mealRepository);
+
+  Future<void> saveMeal(Meal meal, {File? newMealImage}) async {
+    _mealSaveProgressController.sink.add(const LoadingState.loading(null));
+
+    try {
+      final result = await _mealRepository.saveMeal(meal, newMealImage: newMealImage);
+      _mealSaveProgressController.sink.add(LoadingState.completed(result));
+    }
+    on Exception catch (e){
+      print(e);
+      _mealSaveProgressController.sink.add(LoadingState.error(e));
+    }
+    catch (e) {
+      print(e);
+      _mealSaveProgressController.sink.add(LoadingState.error(Exception('Unexpected error is happened')));
+    }
+  }
+
+  Future<void> getMeals() async {
+    _mealListController.sink.add(const LoadingState.loading(null));
+
+    try {
+      final results = await _mealRepository.getMeals();
+      _mealListController.sink.add(LoadingState.completed(results));
+    }
+    on Exception catch (e){
+      print(e);
+      _mealListController.sink.add(LoadingState.error(e));
+    }
+    catch (e) {
+      print(e);
+      _mealSaveProgressController.sink.add(LoadingState.error(Exception('Unexpected error is happened')));
+    }
   }
 
   void deleteMeal() {

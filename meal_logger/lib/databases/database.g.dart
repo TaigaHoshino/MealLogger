@@ -242,16 +242,38 @@ class $MealsTable extends Meals with TableInfo<$MealsTable, Meal> {
       const VerificationMeta('lastCookedDate');
   @override
   late final GeneratedColumn<DateTime> lastCookedDate =
-      GeneratedColumn<DateTime>('last_cooked_date', aliasedName, false,
-          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+      GeneratedColumn<DateTime>('last_cooked_date', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _imagePathInAppDocMeta =
+      const VerificationMeta('imagePathInAppDoc');
+  @override
+  late final GeneratedColumn<String> imagePathInAppDoc =
+      GeneratedColumn<String>('image_path_in_app_doc', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(""));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _deleteFlagMeta =
+      const VerificationMeta('deleteFlag');
   @override
-  List<GeneratedColumn> get $columns => [id, name, lastCookedDate, createdAt];
+  late final GeneratedColumn<bool> deleteFlag =
+      GeneratedColumn<bool>('delete_flag', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintsDependsOnDialect({
+            SqlDialect.sqlite: 'CHECK ("delete_flag" IN (0, 1))',
+            SqlDialect.mysql: '',
+            SqlDialect.postgres: '',
+          }),
+          defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, lastCookedDate, imagePathInAppDoc, createdAt, deleteFlag];
   @override
   String get aliasedName => _alias ?? 'meals';
   @override
@@ -273,14 +295,24 @@ class $MealsTable extends Meals with TableInfo<$MealsTable, Meal> {
           _lastCookedDateMeta,
           lastCookedDate.isAcceptableOrUnknown(
               data['last_cooked_date']!, _lastCookedDateMeta));
-    } else if (isInserting) {
-      context.missing(_lastCookedDateMeta);
+    }
+    if (data.containsKey('image_path_in_app_doc')) {
+      context.handle(
+          _imagePathInAppDocMeta,
+          imagePathInAppDoc.isAcceptableOrUnknown(
+              data['image_path_in_app_doc']!, _imagePathInAppDocMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     } else if (isInserting) {
       context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('delete_flag')) {
+      context.handle(
+          _deleteFlagMeta,
+          deleteFlag.isAcceptableOrUnknown(
+              data['delete_flag']!, _deleteFlagMeta));
     }
     return context;
   }
@@ -296,9 +328,13 @@ class $MealsTable extends Meals with TableInfo<$MealsTable, Meal> {
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       lastCookedDate: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}last_cooked_date'])!,
+          DriftSqlType.dateTime, data['${effectivePrefix}last_cooked_date']),
+      imagePathInAppDoc: attachedDatabase.typeMapping.read(DriftSqlType.string,
+          data['${effectivePrefix}image_path_in_app_doc'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      deleteFlag: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}delete_flag'])!,
     );
   }
 
@@ -311,20 +347,28 @@ class $MealsTable extends Meals with TableInfo<$MealsTable, Meal> {
 class Meal extends DataClass implements Insertable<Meal> {
   final int id;
   final String name;
-  final DateTime lastCookedDate;
+  final DateTime? lastCookedDate;
+  final String imagePathInAppDoc;
   final DateTime createdAt;
+  final bool deleteFlag;
   const Meal(
       {required this.id,
       required this.name,
-      required this.lastCookedDate,
-      required this.createdAt});
+      this.lastCookedDate,
+      required this.imagePathInAppDoc,
+      required this.createdAt,
+      required this.deleteFlag});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
-    map['last_cooked_date'] = Variable<DateTime>(lastCookedDate);
+    if (!nullToAbsent || lastCookedDate != null) {
+      map['last_cooked_date'] = Variable<DateTime>(lastCookedDate);
+    }
+    map['image_path_in_app_doc'] = Variable<String>(imagePathInAppDoc);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['delete_flag'] = Variable<bool>(deleteFlag);
     return map;
   }
 
@@ -332,8 +376,12 @@ class Meal extends DataClass implements Insertable<Meal> {
     return MealsCompanion(
       id: Value(id),
       name: Value(name),
-      lastCookedDate: Value(lastCookedDate),
+      lastCookedDate: lastCookedDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCookedDate),
+      imagePathInAppDoc: Value(imagePathInAppDoc),
       createdAt: Value(createdAt),
+      deleteFlag: Value(deleteFlag),
     );
   }
 
@@ -343,8 +391,10 @@ class Meal extends DataClass implements Insertable<Meal> {
     return Meal(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      lastCookedDate: serializer.fromJson<DateTime>(json['lastCookedDate']),
+      lastCookedDate: serializer.fromJson<DateTime?>(json['lastCookedDate']),
+      imagePathInAppDoc: serializer.fromJson<String>(json['imagePathInAppDoc']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      deleteFlag: serializer.fromJson<bool>(json['deleteFlag']),
     );
   }
   @override
@@ -353,21 +403,28 @@ class Meal extends DataClass implements Insertable<Meal> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
-      'lastCookedDate': serializer.toJson<DateTime>(lastCookedDate),
+      'lastCookedDate': serializer.toJson<DateTime?>(lastCookedDate),
+      'imagePathInAppDoc': serializer.toJson<String>(imagePathInAppDoc),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'deleteFlag': serializer.toJson<bool>(deleteFlag),
     };
   }
 
   Meal copyWith(
           {int? id,
           String? name,
-          DateTime? lastCookedDate,
-          DateTime? createdAt}) =>
+          Value<DateTime?> lastCookedDate = const Value.absent(),
+          String? imagePathInAppDoc,
+          DateTime? createdAt,
+          bool? deleteFlag}) =>
       Meal(
         id: id ?? this.id,
         name: name ?? this.name,
-        lastCookedDate: lastCookedDate ?? this.lastCookedDate,
+        lastCookedDate:
+            lastCookedDate.present ? lastCookedDate.value : this.lastCookedDate,
+        imagePathInAppDoc: imagePathInAppDoc ?? this.imagePathInAppDoc,
         createdAt: createdAt ?? this.createdAt,
+        deleteFlag: deleteFlag ?? this.deleteFlag,
       );
   @override
   String toString() {
@@ -375,13 +432,16 @@ class Meal extends DataClass implements Insertable<Meal> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('lastCookedDate: $lastCookedDate, ')
-          ..write('createdAt: $createdAt')
+          ..write('imagePathInAppDoc: $imagePathInAppDoc, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('deleteFlag: $deleteFlag')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, lastCookedDate, createdAt);
+  int get hashCode => Object.hash(
+      id, name, lastCookedDate, imagePathInAppDoc, createdAt, deleteFlag);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -389,51 +449,66 @@ class Meal extends DataClass implements Insertable<Meal> {
           other.id == this.id &&
           other.name == this.name &&
           other.lastCookedDate == this.lastCookedDate &&
-          other.createdAt == this.createdAt);
+          other.imagePathInAppDoc == this.imagePathInAppDoc &&
+          other.createdAt == this.createdAt &&
+          other.deleteFlag == this.deleteFlag);
 }
 
 class MealsCompanion extends UpdateCompanion<Meal> {
   final Value<int> id;
   final Value<String> name;
-  final Value<DateTime> lastCookedDate;
+  final Value<DateTime?> lastCookedDate;
+  final Value<String> imagePathInAppDoc;
   final Value<DateTime> createdAt;
+  final Value<bool> deleteFlag;
   const MealsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.lastCookedDate = const Value.absent(),
+    this.imagePathInAppDoc = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.deleteFlag = const Value.absent(),
   });
   MealsCompanion.insert({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
-    required DateTime lastCookedDate,
+    this.lastCookedDate = const Value.absent(),
+    this.imagePathInAppDoc = const Value.absent(),
     required DateTime createdAt,
-  })  : lastCookedDate = Value(lastCookedDate),
-        createdAt = Value(createdAt);
+    this.deleteFlag = const Value.absent(),
+  }) : createdAt = Value(createdAt);
   static Insertable<Meal> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<DateTime>? lastCookedDate,
+    Expression<String>? imagePathInAppDoc,
     Expression<DateTime>? createdAt,
+    Expression<bool>? deleteFlag,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (lastCookedDate != null) 'last_cooked_date': lastCookedDate,
+      if (imagePathInAppDoc != null) 'image_path_in_app_doc': imagePathInAppDoc,
       if (createdAt != null) 'created_at': createdAt,
+      if (deleteFlag != null) 'delete_flag': deleteFlag,
     });
   }
 
   MealsCompanion copyWith(
       {Value<int>? id,
       Value<String>? name,
-      Value<DateTime>? lastCookedDate,
-      Value<DateTime>? createdAt}) {
+      Value<DateTime?>? lastCookedDate,
+      Value<String>? imagePathInAppDoc,
+      Value<DateTime>? createdAt,
+      Value<bool>? deleteFlag}) {
     return MealsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       lastCookedDate: lastCookedDate ?? this.lastCookedDate,
+      imagePathInAppDoc: imagePathInAppDoc ?? this.imagePathInAppDoc,
       createdAt: createdAt ?? this.createdAt,
+      deleteFlag: deleteFlag ?? this.deleteFlag,
     );
   }
 
@@ -449,8 +524,14 @@ class MealsCompanion extends UpdateCompanion<Meal> {
     if (lastCookedDate.present) {
       map['last_cooked_date'] = Variable<DateTime>(lastCookedDate.value);
     }
+    if (imagePathInAppDoc.present) {
+      map['image_path_in_app_doc'] = Variable<String>(imagePathInAppDoc.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (deleteFlag.present) {
+      map['delete_flag'] = Variable<bool>(deleteFlag.value);
     }
     return map;
   }
@@ -461,7 +542,9 @@ class MealsCompanion extends UpdateCompanion<Meal> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('lastCookedDate: $lastCookedDate, ')
-          ..write('createdAt: $createdAt')
+          ..write('imagePathInAppDoc: $imagePathInAppDoc, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('deleteFlag: $deleteFlag')
           ..write(')'))
         .toString();
   }

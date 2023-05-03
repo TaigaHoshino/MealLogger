@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meal_logger/blocs/app_bloc.dart';
-import 'package:meal_logger/repositories/app_repository.dart';
+import 'package:meal_logger/repositories/meal_repository.dart';
 import 'package:meal_logger/screens/main_screen.dart';
 
 void main() {
-  GetIt.I.registerSingleton(AppBloc(AppRepository()));
+  GetIt.I.registerSingleton(AppBloc(MealRepository()));
   runApp(const MealLoggerApp());
 }
 

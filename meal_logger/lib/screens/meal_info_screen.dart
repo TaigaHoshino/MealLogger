@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:meal_logger/dtos/meal_ref_url.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../blocs/app_bloc.dart';
@@ -9,6 +12,7 @@ import '../dtos/meal.dart';
 
 class MealInfoScreen extends StatefulWidget {
   final Meal _meal;
+  File? _mealPicture;
   final AppBloc appBloc = GetIt.I<AppBloc>();
 
   MealInfoScreen(this._meal, {super.key});
@@ -45,8 +49,9 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                           ),
                           IconButton(
                             onPressed: () async {
-                                FilePickerResult? result = await FilePicker.platform.pickFiles();
+                                FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
                                 if (result != null) {
+                                  widget._mealPicture = File(result.files.single.path.toString());
 
                                 } else {
                                   // User canceled the picker
@@ -78,7 +83,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                             const Spacer(),
                             IconButton(onPressed: () {
                                 setState(() {
-                                  widget._meal.refUrls.add('');
+                                  widget._meal.refUrls.add(MealRefUrl(url: ''));
                                 });
                               }, icon: const Icon(Icons.add))]),
                           ListView.builder(
@@ -90,12 +95,12 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                                 decoration: BoxDecoration(border: Border(bottom: BorderSide())),
                                 child: ListTile(
                                   title: TextFormField(
-                                    initialValue: widget._meal.refUrls[index],
-                                    onChanged: (text) {widget._meal.refUrls[index] = text;}),
+                                    initialValue: widget._meal.refUrls[index].url,
+                                    onChanged: (text) {widget._meal.refUrls[index].url = text;}),
                                   trailing: IconButton(
                                     onPressed: () async {
                                       final url = Uri.parse(
-                                        widget._meal.refUrls[index],
+                                        widget._meal.refUrls[index].url,
                                       );
                                       if (await canLaunchUrl(url)) {
                                         launchUrl(url);
@@ -123,8 +128,8 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size.fromHeight(50), // fromHeight use double.infinity as width and 40 is the height
                   ),
-                  onPressed: () {
-                    widget.appBloc.addMeal();
+                  onPressed: () async {
+                    await widget.appBloc.saveMeal(widget._meal, newMealImage: widget._mealPicture);
                   },
                   child: Text('保存する'),
                 )
