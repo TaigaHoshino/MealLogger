@@ -23,6 +23,14 @@ class MealInfoScreen extends StatefulWidget {
 
 class _MealInfoScreenState extends State<MealInfoScreen> {
   @override
+  void initState() {
+    super.initState();
+    if(widget._meal.imageFullPath.isNotEmpty) {
+      widget._mealPicture = File(widget._meal.imageFullPath);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -44,15 +52,20 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                             aspectRatio: 16/9,
                             child: Container(
                               width: double.infinity,
-                              child: const Center(child: Text('No Image', textScaleFactor: 2.5, style: TextStyle(color: Colors.grey))),
+                              child: Center(
+                                  child: widget._mealPicture != null ?
+                                    Image.file(widget._mealPicture!) :
+                                    const Text('No Image', textScaleFactor: 2.5, style: TextStyle(color: Colors.grey))
+                              ),
                             )
                           ),
                           IconButton(
                             onPressed: () async {
                                 FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
                                 if (result != null) {
-                                  widget._mealPicture = File(result.files.single.path.toString());
-
+                                  setState(() {
+                                    widget._mealPicture = File(result.files.single.path.toString());
+                                  });
                                 } else {
                                   // User canceled the picker
                                 }

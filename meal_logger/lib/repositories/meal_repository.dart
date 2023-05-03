@@ -16,10 +16,11 @@ class MealRepository {
     if(newMealImage != null) {
       savedPathInAppDoc = '/$_mealPictureDirName/${basename(newMealImage.path)}';
       final savedPath = (await getApplicationDocumentsDirectory()).path + savedPathInAppDoc;
-      newMealImage.copy(savedPath);
+      await Directory(dirname(savedPath)).create(recursive: true);
       if(meal.imagePathInAppDoc.isNotEmpty) {
-        await _deleteFile(meal.imagePathInAppDoc);
+        await _deleteFile(meal.imageFullPath);
       }
+      await newMealImage.copy(savedPath);
     }
     int id = await _database.saveMeal(meal, imagePathInAppDoc: savedPathInAppDoc);
     return (await _database.getMeals(ids: [id])).first;
