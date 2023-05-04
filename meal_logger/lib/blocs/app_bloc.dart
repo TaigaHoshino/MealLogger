@@ -32,7 +32,7 @@ class AppBloc {
     }
     catch (e) {
       print(e);
-      _mealSaveProgressController.sink.add(LoadingState.error(Exception('Unexpected error is happened')));
+      _mealSaveProgressController.sink.add(LoadingState.error(Exception('Unexpected error is occurred')));
     }
   }
 
@@ -49,11 +49,11 @@ class AppBloc {
     }
     catch (e) {
       print(e);
-      _mealSaveProgressController.sink.add(LoadingState.error(Exception('Unexpected error is happened')));
+      _mealSaveProgressController.sink.add(LoadingState.error(Exception('Unexpected error is occurred')));
     }
   }
 
-  void deleteMeal() {
-
+  Future<void> deleteMeal(Meal meal) async {
+    await _mealRepository.deleteMeal(meal);
   }
 }

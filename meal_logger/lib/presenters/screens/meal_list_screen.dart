@@ -5,6 +5,7 @@ import 'package:meal_logger/presenters/components/meal_list_item_component.dart'
 import '../../blocs/app_bloc.dart';
 import '../../dtos/meal.dart';
 import '../../states/loading_state.dart';
+import '../builders/popupmenu_button_builder.dart';
 import 'meal_info_screen.dart';
 
 class MealListScreen extends StatefulWidget {
@@ -38,22 +39,60 @@ class _MealListScreenState extends State<MealListScreen> {
       body: StreamBuilder<LoadingState<List<Meal>>>(
         stream: widget.appBloc.mealList,
         builder: (context, snapshot){
-          Widget widget = const Text("");
+          Widget component = const Text("");
           if(!snapshot.hasData){
-            return widget;
+            return component;
           }
 
           snapshot.data!.when(
-            loading: (_) => {},
+            loading: (_) => {
+              component = const Center(
+                child: CircularProgressIndicator()
+              )
+            },
             completed: (content) => {
-              widget = ListView.builder(
+              component = ListView.builder(
                 itemCount: content.length,
                 itemBuilder: (context, index) {
                   final meal = content.elementAt(index);
+
+                  final popupMenuButtonBuilder = PopupMenuButtonBuilder();
+                  popupMenuButtonBuilder.addMenu(
+                    const Text('削除'),
+                        () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("料理の削除"),
+                            content: Text("\"${meal.name}\"を削除します。この操作は取り消せませんが、よろしいですか？"),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('キャンセル'),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                              TextButton(
+                                child: const Text('削除'),
+                                onPressed: () async {
+                                  Navigator.pop(context);
+                                  await widget.appBloc.deleteMeal(meal);
+                                  widget.appBloc.getMeals();
+                                },
+                              )
+                            ]
+                          );
+                        }
+                      );
+                    });
+
                   return GestureDetector(
                     child: MealListItemComponent(
-                        meal,
-                        onTap: () {transitionToMealInfoScreen(meal);}),
+                      meal,
+                      onTap: () => transitionToMealInfoScreen(meal),
+                      popupMenuButton: popupMenuButtonBuilder.build(),
+                    ),
                   );
                 },
               )
@@ -61,7 +100,7 @@ class _MealListScreenState extends State<MealListScreen> {
             error: (_) => {}
           );
 
-          return widget;
+          return component;
         }
       )
     );

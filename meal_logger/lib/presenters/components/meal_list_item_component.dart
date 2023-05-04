@@ -2,14 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:meal_logger/presenters/builders/popupmenu_button_builder.dart';
 
 import '../../dtos/meal.dart';
 
 class MealListItemComponent extends StatelessWidget {
   final Meal _meal;
   final Function? onTap;
+  final PopupMenuButton? popupMenuButton;
 
-  const MealListItemComponent(this._meal ,{super.key, this.onTap});
+  const MealListItemComponent(this._meal ,{super.key, this.onTap, this.popupMenuButton});
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +30,7 @@ class MealListItemComponent extends StatelessWidget {
                 ),
               )
           ),
+          trailing: popupMenuButton,
           title: Text(_meal.name),
           onTap: () {
             onTap?.call();

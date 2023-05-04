@@ -111,7 +111,7 @@ class Database extends _$Database {
          mealRefUrls,
          mealRefUrls.mealId.equalsExp(meals.id)),
       ]
-    );
+    )..where(meals.deleteFlag.equals(false));
 
     if(ids != null && ids.isNotEmpty) {
       query.where(meals.id.isIn(ids));
@@ -147,6 +147,19 @@ class Database extends _$Database {
     }
 
     return mealList;
+  }
+
+  Future<void> deleteMeal(dto.Meal meal) async {
+    if(meal.id == null) {
+      print('can\'t delete meal that is not recorded');
+      return;
+    }
+
+    const mealCompanion = MealsCompanion(
+      deleteFlag: Value(true)
+    );
+
+    await (update(meals)..where((tbl) => tbl.id.equals(meal.id!))).write(mealCompanion);
   }
 }
 

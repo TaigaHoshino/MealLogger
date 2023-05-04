@@ -17,7 +17,7 @@ class MealRepository {
       savedPathInAppDoc = '/$_mealPictureDirName/${basename(newMealImage.path)}';
       final savedPath = (await getApplicationDocumentsDirectory()).path + savedPathInAppDoc;
       await Directory(dirname(savedPath)).create(recursive: true);
-      if(meal.imagePathInAppDoc.isNotEmpty) {
+      if(meal.imageFullPath.isNotEmpty) {
         await _deleteFile(meal.imageFullPath);
       }
       await newMealImage.copy(savedPath);
@@ -37,8 +37,11 @@ class MealRepository {
     return meals;
   }
 
-  void deleteMeal() {
-
+  Future<void> deleteMeal(dto.Meal meal) async {
+    await _database.deleteMeal(meal);
+    if(meal.imageFullPath.isNotEmpty) {
+      await _deleteFile(meal.imageFullPath);
+    }
   }
 
   Future<void> _deleteFile(String filePath) async {
