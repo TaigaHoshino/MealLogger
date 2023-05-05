@@ -15,7 +15,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   
   int _currentIndex = 0;
-  final _pageWidgets = [
+  final _screens = [
     const TodayMenuScreen(),
     MealListScreen(),
     const MenuLogScreen()
@@ -27,23 +27,15 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         title: const Text('献立履歴'),
       ),
-      body: CupertinoTabScaffold(
-        tabBar: CupertinoTabBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: '今日の献立'),
-            BottomNavigationBarItem(icon: Icon(Icons.set_meal), label: '料理リスト'),
-            BottomNavigationBarItem(icon: Icon(Icons.history), label: '献立履歴')
-          ],
-          currentIndex: _currentIndex,
-          onTap: _onItemTapped,
-        ),
-        tabBuilder: (context, index) {
-          return CupertinoTabView(builder: (context) {
-            return CupertinoPageScaffold(
-              child: _pageWidgets[index]
-            );
-          });
-        },
+      body: _screens[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: '今日の献立'),
+          BottomNavigationBarItem(icon: Icon(Icons.set_meal), label: '料理リスト'),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: '献立履歴')
+        ],
+        onTap: _onItemTapped,
+        currentIndex: _currentIndex,
       )
     );
   }

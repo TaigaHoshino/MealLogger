@@ -87,12 +87,10 @@ class _MealListScreenState extends State<MealListScreen> {
                       );
                     });
 
-                  return GestureDetector(
-                    child: MealListItemComponent(
+                  return MealListItemComponent(
                       meal,
                       onTap: () => transitionToMealInfoScreen(meal),
                       popupMenuButton: popupMenuButtonBuilder.build(),
-                    ),
                   );
                 },
               )

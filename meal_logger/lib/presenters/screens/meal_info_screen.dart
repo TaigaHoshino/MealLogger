@@ -100,7 +100,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                               }, icon: const Icon(Icons.add))]),
                           ListView.builder(
                             itemCount: widget._meal.refUrls.length,
-                            physics: NeverScrollableScrollPhysics(),
+                            physics: const NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
                             itemBuilder: (BuildContext context, int index) {
                               return Container(
