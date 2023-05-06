@@ -7,13 +7,13 @@ import 'package:get_it/get_it.dart';
 import 'package:meal_logger/dtos/meal_ref_url.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../blocs/app_bloc.dart';
+import '../../blocs/meal_bloc.dart';
 import '../../dtos/meal.dart';
 
 class MealInfoScreen extends StatefulWidget {
   final Meal _meal;
   File? _mealPicture;
-  final AppBloc appBloc = GetIt.I<AppBloc>();
+  final MealBloc _mealBloc = GetIt.I<MealBloc>();
 
   MealInfoScreen(this._meal, {super.key});
 
@@ -104,7 +104,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                             shrinkWrap: true,
                             itemBuilder: (BuildContext context, int index) {
                               return Container(
-                                decoration: BoxDecoration(border: Border(bottom: BorderSide())),
+                                decoration: const BoxDecoration(border: Border(bottom: BorderSide())),
                                 child: ListTile(
                                   title: TextFormField(
                                     initialValue: widget._meal.refUrls[index].url,
@@ -138,10 +138,10 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
               child:
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size.fromHeight(50), // fromHeight use double.infinity as width and 40 is the height
+                    minimumSize: const Size.fromHeight(50), // fromHeight use double.infinity as width and 40 is the height
                   ),
                   onPressed: () async {
-                    await widget.appBloc.saveMeal(widget._meal, newMealImage: widget._mealPicture);
+                    await widget._mealBloc.saveMeal(widget._meal, newMealImage: widget._mealPicture);
                   },
                   child: Text('保存する'),
                 )

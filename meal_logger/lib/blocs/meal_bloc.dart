@@ -6,7 +6,7 @@ import 'package:rxdart/rxdart.dart';
 
 import '../dtos/meal.dart';
 
-class AppBloc {
+class MealBloc {
   final MealRepository _mealRepository;
 
   final _mealSaveProgressController = BehaviorSubject<LoadingState<Meal>>();
@@ -17,7 +17,7 @@ class AppBloc {
 
   Stream<LoadingState<List<Meal>>> get mealList => _mealListController.stream;
 
-  AppBloc(this._mealRepository);
+  MealBloc(this._mealRepository);
 
   Future<void> saveMeal(Meal meal, {File? newMealImage}) async {
     _mealSaveProgressController.sink.add(const LoadingState.loading(null));

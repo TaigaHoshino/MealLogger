@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meal_logger/presenters/components/meal_list_item_component.dart';
 
-import '../../blocs/app_bloc.dart';
+import '../../blocs/meal_bloc.dart';
 import '../../dtos/meal.dart';
 import '../../states/loading_state.dart';
 import '../builders/popupmenu_button_builder.dart';
 import 'meal_info_screen.dart';
 
 class MealListScreen extends StatefulWidget {
-  final AppBloc appBloc = GetIt.I<AppBloc>();
+  final MealBloc _mealBloc = GetIt.I<MealBloc>();
 
   MealListScreen({super.key});
 
@@ -21,7 +21,7 @@ class _MealListScreenState extends State<MealListScreen> {
   @override
   void initState() {
     super.initState();
-    widget.appBloc.getMeals();
+    widget._mealBloc.getMeals();
   }
 
   @override
@@ -37,7 +37,7 @@ class _MealListScreenState extends State<MealListScreen> {
             },
             icon: const Icon(Icons.add))]),
       body: StreamBuilder<LoadingState<List<Meal>>>(
-        stream: widget.appBloc.mealList,
+        stream: widget._mealBloc.mealList,
         builder: (context, snapshot){
           Widget component = const Text("");
           if(!snapshot.hasData){
@@ -77,8 +77,8 @@ class _MealListScreenState extends State<MealListScreen> {
                                 child: const Text('削除'),
                                 onPressed: () async {
                                   Navigator.pop(context);
-                                  await widget.appBloc.deleteMeal(meal);
-                                  widget.appBloc.getMeals();
+                                  await widget._mealBloc.deleteMeal(meal);
+                                  widget._mealBloc.getMeals();
                                 },
                               )
                             ]
@@ -106,6 +106,6 @@ class _MealListScreenState extends State<MealListScreen> {
 
   void transitionToMealInfoScreen(Meal meal) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => MealInfoScreen(meal)))
-        .then((value) async => await widget.appBloc.getMeals());
+        .then((value) async => await widget._mealBloc.getMeals());
   }
 }

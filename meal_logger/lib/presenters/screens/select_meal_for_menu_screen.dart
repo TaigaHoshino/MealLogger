@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:meal_logger/blocs/menu_bloc.dart';
+import 'package:meal_logger/constants/dinner_hours_type.dart';
 import 'package:meal_logger/dtos/meal.dart';
 import 'package:meal_logger/presenters/components/meal_list_item_component.dart';
 
-import '../../blocs/app_bloc.dart';
+import '../../blocs/meal_bloc.dart';
 import '../../states/loading_state.dart';
 
 class SelectMealForMenuScreen extends StatefulWidget {
-  final AppBloc appBloc = GetIt.I<AppBloc>();
+  final MealBloc _mealBloc = GetIt.I<MealBloc>();
+  final MenuBloc _menuBloc = GetIt.I<MenuBloc>();
+  List<Meal> _selectedMeals = [];
+  final DinnerHoursType _type;
 
-  SelectMealForMenuScreen({super.key});
+  SelectMealForMenuScreen(this._type ,{super.key});
 
   @override
   State<SelectMealForMenuScreen> createState() => _SelectMealForMenuScreenState();
@@ -18,7 +23,7 @@ class SelectMealForMenuScreen extends StatefulWidget {
 class _SelectMealForMenuScreenState extends State<SelectMealForMenuScreen>{
   @override
   Widget build(BuildContext context) {
-    widget.appBloc.getMeals();
+    widget._mealBloc.getMeals();
 
     return Scaffold(
       appBar: AppBar(
@@ -29,7 +34,7 @@ class _SelectMealForMenuScreenState extends State<SelectMealForMenuScreen>{
           Expanded(
             child:
               StreamBuilder<LoadingState<List<Meal>>>(
-                stream: widget.appBloc.mealList,
+                stream: widget._mealBloc.mealList,
                 builder: (context, snapshot){
                   Widget component = const Text("");
                   if(!snapshot.hasData){
@@ -50,8 +55,16 @@ class _SelectMealForMenuScreenState extends State<SelectMealForMenuScreen>{
 
                           return MealListItemComponent(
                             meal,
-                            onTap: () {},
+                            onTap: () {
+                              if(!widget._selectedMeals.contains(meal)) {
+                                widget._selectedMeals.add(meal);
+                              }
+                              else {
+                                widget._selectedMeals.remove(meal);
+                              }
+                            },
                             selectedColor: Colors.lightBlue,
+                            isSelected: widget._selectedMeals.contains(meal),
                           );
                         },
                       );
@@ -63,17 +76,17 @@ class _SelectMealForMenuScreenState extends State<SelectMealForMenuScreen>{
               })
           ),
           Container(
-              padding: const EdgeInsets.all(10.0),
-              child:
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size.fromHeight(50), // fromHeight use double.infinity as width and 40 is the height
-                ),
-                onPressed: () {
-
-                },
-                child: Text('追加する'),
-              )
+            padding: const EdgeInsets.all(10.0),
+            child:
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50), // fromHeight use double.infinity as width and 40 is the height
+              ),
+              onPressed: () {
+                widget._menuBloc.addMealsToTodayMenu(widget._selectedMeals, widget._type);
+              },
+              child: const Text('追加する'),
+            )
           )
         ],
       )

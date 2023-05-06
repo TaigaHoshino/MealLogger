@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:meal_logger/blocs/app_bloc.dart';
+import 'package:meal_logger/blocs/meal_bloc.dart';
+import 'package:meal_logger/databases/database.dart';
 import 'package:meal_logger/presenters/screens/main_screen.dart';
 import 'package:meal_logger/repositories/meal_repository.dart';
+import 'package:meal_logger/repositories/menu_repository.dart';
+
+import 'blocs/menu_bloc.dart';
 
 void main() {
-  GetIt.I.registerSingleton(AppBloc(MealRepository()));
+  final database = Database();
+  GetIt.I.registerSingleton(MealBloc(MealRepository(database)));
+  GetIt.I.registerSingleton(MenuBloc(MenuRepository(database)));
   runApp(const MealLoggerApp());
 }
 

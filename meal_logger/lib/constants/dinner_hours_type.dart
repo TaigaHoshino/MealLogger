@@ -1,6 +1,18 @@
-// 項目には上から順に連番が振られるため、項目を追加する場合は必ず一番下に追加する
 enum DinnerHoursType {
-  breakFast,
-  launch,
-  dinner
+  breakFast(1),
+  lunch(2),
+  dinner(3);
+
+  final int value;
+  const DinnerHoursType(this.value);
+
+  factory DinnerHoursType.intToDinnerHoursType(int value) {
+    List<DinnerHoursType> enumValues = DinnerHoursType.values;
+    if (value >= 0 && value < enumValues.length) {
+      return enumValues[value];
+    }
+    else {
+      throw ArgumentError('Invalid value: $value');
+    }
+  }
 }

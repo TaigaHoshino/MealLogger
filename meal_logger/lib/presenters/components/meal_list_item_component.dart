@@ -19,8 +19,9 @@ class MealListItemComponent extends StatefulWidget {
         super.key,
         this.onTap,
         this.popupMenuButton,
-        this.selectedColor
-      });
+        this.selectedColor,
+        bool isSelected = false
+      }) : _isSelected = isSelected;
 
   @override
   State<StatefulWidget> createState() => _MealListItemComponentState();

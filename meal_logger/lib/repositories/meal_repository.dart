@@ -7,9 +7,11 @@ import '../dtos/meal.dart' as dto;
 import 'package:path/path.dart';
 
 class MealRepository {
-  final _database = Database();
+  final Database _database;
 
   static const _mealPictureDirName = 'picture_meal';
+
+  MealRepository(this._database);
 
   Future<dto.Meal> saveMeal(dto.Meal meal, {File? newMealImage}) async {
     String? savedPathInAppDoc;

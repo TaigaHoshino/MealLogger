@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:meal_logger/constants/dinner_hours_type.dart';
 import 'package:path/path.dart' as p;
 import '../dtos/meal.dart' as dto;
 import '../dtos/meal_ref_url.dart' as dto;
+import '../dtos/menu.dart' as dto;
 import 'package:path_provider/path_provider.dart';
 
 part 'database.g.dart';
@@ -117,36 +119,29 @@ class Database extends _$Database {
       query.where(meals.id.isIn(ids));
     }
 
-    List<dto.Meal> mealList = [];
-
-    final idToMealEntities = <int, Meal>{};
-    final idToRefUrls = <int, List<dto.MealRefUrl>>{};
+    final idToMeal = <int, dto.Meal>{};
 
     for(final mealEntity in await query.map((row) => row.readTable(meals)).get()) {
-      idToMealEntities.putIfAbsent(mealEntity.id, () => mealEntity);
+      idToMeal.putIfAbsent(mealEntity.id, () =>
+        dto.Meal(
+            id: mealEntity.id,
+            name: mealEntity.name,
+            lastCookedDate: mealEntity.lastCookedDate,
+            createdAt: mealEntity.createdAt,
+            refUrls: [],
+            imagePathInAppDoc: mealEntity.imagePathInAppDoc
+        )
+      );
     }
 
     for(final refUrl in await query.map((row) => row.readTableOrNull(mealRefUrls)).get()) {
       if(refUrl == null) {
         continue;
       }
-      idToRefUrls.putIfAbsent(refUrl.mealId, () => []).add(dto.MealRefUrl(id: refUrl.id, url: refUrl.url));
+      idToMeal[refUrl.mealId]?.refUrls.add(dto.MealRefUrl(id: refUrl.id, url: refUrl.url));
     }
 
-    for(final mealEntity in idToMealEntities.values){
-      mealList.add(
-        dto.Meal(
-          id: mealEntity.id,
-          name: mealEntity.name,
-          lastCookedDate: mealEntity.lastCookedDate,
-          createdAt: mealEntity.createdAt,
-          refUrls: idToRefUrls[mealEntity.id],
-          imagePathInAppDoc: mealEntity.imagePathInAppDoc
-        )
-      );
-    }
-
-    return mealList;
+    return idToMeal.values.toList();
   }
 
   Future<void> deleteMeal(dto.Meal meal) async {
@@ -160,6 +155,107 @@ class Database extends _$Database {
     );
 
     await (update(meals)..where((tbl) => tbl.id.equals(meal.id!))).write(mealCompanion);
+  }
+
+  Future<void> addMealsToTodayMenu(List<dto.Meal> meals, DinnerHoursType type) async {
+    int menuId;
+
+    final now = DateTime.now();
+
+    final menuList = await (select(menus)..where((tbl) => tbl.cookedDate.equals(DateTime(now.year, now.month, now.day)))).get();
+
+    // 今日はじめての料理追加の場合
+    if(menuList.isEmpty) {
+      menuId = await into(menus).insert(MenusCompanion(
+        dinnerHoursType: Value(type.index),
+        cookedDate: Value(DateTime(now.year, now.month, now.day))
+      ));
+    }
+    else {
+      menuId = menuList.first.id;
+    }
+
+    for(final meal in meals) {
+      await into(inclusionsInMenu).insert(
+        InclusionsInMenuCompanion(
+          menuId: Value(menuId),
+          mealId: Value(meal.id!)
+        )
+      );
+    }
+  }
+
+  Future<List<dto.Menu>> getMenus({DateTime? cookedDate}) async {
+    final menuQuery = select(menus);
+
+    if(cookedDate != null) {
+      menuQuery.where((tbl) =>
+          tbl.cookedDate.equals(DateTime(cookedDate.year, cookedDate.month, cookedDate.day)));
+    }
+
+    List<dto.Menu> menuList = [];
+
+    for(final menuEntity in await menuQuery.get()) {
+      menuList.add(dto.Menu(
+        menuEntity.cookedDate,
+        [],
+        DinnerHoursType.intToDinnerHoursType(menuEntity.dinnerHoursType),
+        id: menuEntity.id
+      ));
+    }
+
+    List<int> menuIds = [];
+
+    for(final menu in menuList) {
+      menuIds.add(menu.id!);
+    }
+
+    final query = select(inclusionsInMenu).join(
+      [
+        leftOuterJoin(
+          meals,
+          meals.id.equalsExp(inclusionsInMenu.mealId)
+        ),
+        leftOuterJoin(
+          mealRefUrls,
+          mealRefUrls.mealId.equalsExp(inclusionsInMenu.mealId)
+        )
+      ]
+    )..where(inclusionsInMenu.menuId.isIn(menuIds));
+
+    final menuIdToMeals = <int, List<dto.Meal>>{};
+    final mealIdToRefUrls = <int, List<dto.MealRefUrl>>{};
+
+    for(final refUrlEntity in await query.map((row) => row.readTableOrNull(mealRefUrls)).get()) {
+      if(refUrlEntity == null) {
+        continue;
+      }
+      mealIdToRefUrls.putIfAbsent(refUrlEntity.mealId, () => []).add(
+        dto.MealRefUrl(id: refUrlEntity.id, url: refUrlEntity.url)
+      );
+    }
+
+    for(final joinedEntity in await query.get()) {
+      final inclusion = joinedEntity.readTable(inclusionsInMenu);
+      final mealEntity = joinedEntity.readTable(meals);
+
+      menuIdToMeals.putIfAbsent(inclusion.menuId, () => []).add(
+        dto.Meal(
+          id: mealEntity.id,
+          name: mealEntity.name,
+          lastCookedDate: mealEntity.lastCookedDate,
+          createdAt: mealEntity.createdAt,
+          refUrls: mealIdToRefUrls[mealEntity.id],
+          imagePathInAppDoc: mealEntity.imagePathInAppDoc
+        )
+      );
+    }
+
+    for(final menu in menuList) {
+      menu.meals.addAll(menuIdToMeals[menu.id]?.toList() ?? []);
+    }
+
+    return menuList;
   }
 }
 
