@@ -7,9 +7,10 @@ import 'package:meal_logger/presenters/screens/select_meal_for_menu_screen.dart'
 
 import '../../constants/dinner_hours_type.dart';
 import '../../states/loading_state.dart';
+import '../components/meal_list_item_component.dart';
 
 class TodayMenuScreen extends StatefulWidget {
-  MenuBloc _menuBloc = GetIt.I<MenuBloc>();
+  final MenuBloc _menuBloc = GetIt.I<MenuBloc>();
 
   TodayMenuScreen({super.key});
 
@@ -19,8 +20,13 @@ class TodayMenuScreen extends StatefulWidget {
 
 class _TodayMenuScreenState extends State<TodayMenuScreen> {
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     widget._menuBloc.getTodayMenus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('今日の献立')),
       body: StreamBuilder<LoadingState<List<Menu>>>(
@@ -45,17 +51,23 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
                   _MenuListExpansionTileComponent(
                     '朝食',
                     dinnerHoursTypeToMenu[DinnerHoursType.breakFast],
-                    () => transitionToSelectMealForMenuScreen(DinnerHoursType.breakFast)
+                    () => transitionToSelectMealForMenuScreen(
+                        dinnerHoursTypeToMenu[DinnerHoursType.breakFast],
+                        DinnerHoursType.breakFast)
                   ),
                   _MenuListExpansionTileComponent(
                     '昼食',
                     dinnerHoursTypeToMenu[DinnerHoursType.lunch],
-                    () => transitionToSelectMealForMenuScreen(DinnerHoursType.lunch)
+                    () => transitionToSelectMealForMenuScreen(
+                        dinnerHoursTypeToMenu[DinnerHoursType.lunch],
+                        DinnerHoursType.lunch)
                   ),
                   _MenuListExpansionTileComponent(
                     '夕食',
                     dinnerHoursTypeToMenu[DinnerHoursType.dinner],
-                    () => transitionToSelectMealForMenuScreen(DinnerHoursType.dinner)
+                    () => transitionToSelectMealForMenuScreen(
+                        dinnerHoursTypeToMenu[DinnerHoursType.dinner],
+                        DinnerHoursType.dinner)
                   ),
                 ]
               );
@@ -69,17 +81,20 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
     );
   }
 
-  void transitionToSelectMealForMenuScreen(DinnerHoursType type) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => SelectMealForMenuScreen(type)));
+  void transitionToSelectMealForMenuScreen(Menu? menu, DinnerHoursType type) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => SelectMealForMenuScreen(menu ,type)))
+        .then((value) => widget._menuBloc.getTodayMenus());
   }
 }
 
 class _MenuListExpansionTileComponent extends StatelessWidget {
+  final MenuBloc _menuBloc = GetIt.I<MenuBloc>();
+
   final String _title;
   final Menu? _menu;
-  final Function? _onTap;
+  final Function? _onAddMealButtonTap;
 
-  const _MenuListExpansionTileComponent(this._title, this._menu, this._onTap);
+  _MenuListExpansionTileComponent(this._title, this._menu, this._onAddMealButtonTap);
 
   @override
   Widget build(BuildContext context) {
@@ -91,24 +106,36 @@ class _MenuListExpansionTileComponent extends StatelessWidget {
           child:
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              minimumSize: Size.fromHeight(50), // fromHeight use double.infinity as width and 40 is the height
+              minimumSize: const Size.fromHeight(50), // fromHeight use double.infinity as width and 40 is the height
             ),
             onPressed: () {
-              _onTap?.call();
+              _onAddMealButtonTap?.call();
             },
             child: const Text('料理を追加'),
           )
         ),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount: _menu?.meals.length ?? 0,
-          itemBuilder: (context, index) {
-            final meal = _menu!.meals.elementAt(index);
-            return ListTile(title: Text(meal.name));
-          }
+        Container(
+          padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+          child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: _menu?.meals.length ?? 0,
+              itemBuilder: (context, index) {
+                final meal = _menu!.meals.elementAt(index);
+                return MealListItemComponent(
+                  meal,
+                  trailingWidget:
+                    IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () async {
+                          await _menuBloc.removeMealFromTodayMenu(_menu!, meal);
+                          await _menuBloc.getTodayMenus();
+                        }
+                    )
+                );
+              }
+          )
         )
       ]
     );
   }
-
 }

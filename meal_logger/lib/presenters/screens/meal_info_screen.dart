@@ -143,7 +143,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                   onPressed: () async {
                     await widget._mealBloc.saveMeal(widget._meal, newMealImage: widget._mealPicture);
                   },
-                  child: Text('保存する'),
+                  child: const Text('保存する'),
                 )
             )
           ],

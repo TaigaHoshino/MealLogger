@@ -8,20 +8,20 @@ import '../../dtos/meal.dart';
 
 class MealListItemComponent extends StatefulWidget {
   final Meal _meal;
-  final Function? onTap;
-  final PopupMenuButton? popupMenuButton;
-  final Color? selectedColor;
+  final Function? _onTap;
+  final Widget? _trailingWidget;
+  final Color? _selectedColor;
   bool _isSelected = false;
 
   MealListItemComponent(
-      this._meal,
-      {
-        super.key,
-        this.onTap,
-        this.popupMenuButton,
-        this.selectedColor,
-        bool isSelected = false
-      }) : _isSelected = isSelected;
+    this._meal,
+    {
+      super.key,
+      Function? onTap,
+      Widget? trailingWidget,
+      Color? selectedColor,
+      bool isSelected = false
+    }) : _onTap = onTap, _trailingWidget = trailingWidget, _selectedColor = selectedColor, _isSelected = isSelected;
 
   @override
   State<StatefulWidget> createState() => _MealListItemComponentState();
@@ -36,22 +36,22 @@ class _MealListItemComponentState extends State<MealListItemComponent> {
       padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
       child: ListTile(
           leading: AspectRatio(
-              aspectRatio: 16/9,
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(color: Colors.black),
-                child: Center(
-                    child: widget._meal.imageFullPath.isNotEmpty ?
-                    Image.file(File(widget._meal.imageFullPath)) :
-                    const Text('No Image', style: TextStyle(color: Colors.white))
-                ),
-              )
+            aspectRatio: 16/9,
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(color: Colors.black),
+              child: Center(
+                  child: widget._meal.imageFullPath.isNotEmpty ?
+                  Image.file(File(widget._meal.imageFullPath)) :
+                  const Text('No Image', style: TextStyle(color: Colors.white))
+              ),
+            )
           ),
-          trailing: widget.popupMenuButton,
+          trailing: widget._trailingWidget,
           title: Text(widget._meal.name),
-          tileColor: widget._isSelected ? widget.selectedColor : null,
+          tileColor: widget._isSelected ? widget._selectedColor : null,
           onTap: () {
-            widget.onTap?.call();
+            widget._onTap?.call();
             setState(() {
               widget._isSelected = !widget._isSelected;
             });

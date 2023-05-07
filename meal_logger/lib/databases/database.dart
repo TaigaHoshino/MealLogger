@@ -185,6 +185,11 @@ class Database extends _$Database {
     }
   }
 
+  Future<void> removeMealFromMenu(dto.Menu menu, dto.Meal meal) async {
+    await (delete(inclusionsInMenu)
+      ..where((tbl) => tbl.menuId.equals(menu.id!) & tbl.mealId.equals(meal.id!))).go();
+  }
+
   Future<List<dto.Menu>> getMenus({DateTime? cookedDate}) async {
     final menuQuery = select(menus);
 

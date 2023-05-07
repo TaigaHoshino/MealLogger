@@ -90,7 +90,7 @@ class _MealListScreenState extends State<MealListScreen> {
                   return MealListItemComponent(
                       meal,
                       onTap: () => transitionToMealInfoScreen(meal),
-                      popupMenuButton: popupMenuButtonBuilder.build(),
+                      trailingWidget: popupMenuButtonBuilder.build(),
                   );
                 },
               )

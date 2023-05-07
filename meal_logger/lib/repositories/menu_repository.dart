@@ -12,6 +12,10 @@ class MenuRepository {
     await _database.addMealsToTodayMenu(meals, type);
   }
 
+  Future<void> removeMealFromMenu(dto.Menu menu, dto.Meal meal) async {
+    await _database.removeMealFromMenu(menu, meal);
+  }
+
   Future<List<dto.Menu>> getMenus({DateTime? cookedDate}) async {
     return await _database.getMenus(cookedDate: cookedDate);
   }
