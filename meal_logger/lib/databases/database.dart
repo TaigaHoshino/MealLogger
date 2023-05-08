@@ -36,9 +36,10 @@ class Meals extends Table {
 class InclusionsInMenu extends Table {
   IntColumn get menuId => integer().references(Menus, #id)();
   IntColumn get mealId => integer().references(Meals, #id)();
+  IntColumn get menuDinnerHoursType => integer().references(Menus, #dinnerHoursType)();
 
   @override
-  Set<Column> get primaryKey => {menuId, mealId};
+  Set<Column> get primaryKey => {menuId, mealId, menuDinnerHoursType};
 }
 
 class MealRefUrls extends Table {
@@ -162,12 +163,15 @@ class Database extends _$Database {
 
     final now = DateTime.now();
 
-    final menuList = await (select(menus)..where((tbl) => tbl.cookedDate.equals(DateTime(now.year, now.month, now.day)))).get();
+    final menuList =
+      await (select(menus)..where((tbl) =>
+          tbl.cookedDate.equals(DateTime(now.year, now.month, now.day)) &
+          tbl.dinnerHoursType.equals(type.value))).get();
 
     // 今日はじめての料理追加の場合
     if(menuList.isEmpty) {
       menuId = await into(menus).insert(MenusCompanion(
-        dinnerHoursType: Value(type.index),
+        dinnerHoursType: Value(type.value),
         cookedDate: Value(DateTime(now.year, now.month, now.day))
       ));
     }
@@ -179,7 +183,8 @@ class Database extends _$Database {
       await into(inclusionsInMenu).insert(
         InclusionsInMenuCompanion(
           menuId: Value(menuId),
-          mealId: Value(meal.id!)
+          mealId: Value(meal.id!),
+          menuDinnerHoursType: Value(type.value)
         )
       );
     }
@@ -229,6 +234,7 @@ class Database extends _$Database {
     )..where(inclusionsInMenu.menuId.isIn(menuIds));
 
     final menuIdToMeals = <int, List<dto.Meal>>{};
+    final idToMeal = <int, dto.Meal>{};
     final mealIdToRefUrls = <int, List<dto.MealRefUrl>>{};
 
     for(final refUrlEntity in await query.map((row) => row.readTableOrNull(mealRefUrls)).get()) {
@@ -244,7 +250,11 @@ class Database extends _$Database {
       final inclusion = joinedEntity.readTable(inclusionsInMenu);
       final mealEntity = joinedEntity.readTable(meals);
 
-      menuIdToMeals.putIfAbsent(inclusion.menuId, () => []).add(
+      if(idToMeal.containsKey(mealEntity.id)) {
+        continue;
+      }
+
+      idToMeal.putIfAbsent(mealEntity.id, () =>
         dto.Meal(
           id: mealEntity.id,
           name: mealEntity.name,
@@ -254,6 +264,8 @@ class Database extends _$Database {
           imagePathInAppDoc: mealEntity.imagePathInAppDoc
         )
       );
+
+      menuIdToMeals.putIfAbsent(inclusion.menuId, () => []).add(idToMeal[mealEntity.id]!);
     }
 
     for(final menu in menuList) {

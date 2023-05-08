@@ -8,6 +8,13 @@ class Meal {
   List<MealRefUrl> refUrls = [];
   String imagePathInAppDoc;
   String imageFullPath;
+  int get elapsedDateFromLastCookedDate {
+    if(lastCookedDate == null) {
+      return -1;
+    }
+
+    return DateTime.now().difference(lastCookedDate!).inDays;
+  }
 
   // idを指定しない場合、新規追加になる
   Meal({this.id,

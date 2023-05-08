@@ -14,8 +14,9 @@ class MealInfoScreen extends StatefulWidget {
   final Meal _meal;
   File? _mealPicture;
   final MealBloc _mealBloc = GetIt.I<MealBloc>();
+  final bool _editMode;
 
-  MealInfoScreen(this._meal, {super.key});
+  MealInfoScreen(this._meal, {super.key, bool editMode = false}) : _editMode = editMode;
 
   @override
   State<MealInfoScreen> createState() => _MealInfoScreenState();
@@ -33,9 +34,9 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text('料理を新規追加'),
-          leading: IconButton(icon: const Icon(Icons.arrow_back),onPressed: () {Navigator.pop(context);})),
+        leading: IconButton(icon: const Icon(Icons.arrow_back),onPressed: () {Navigator.pop(context);})),
       body: SafeArea(
         child: Column(
           children: [
@@ -58,18 +59,21 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                               ),
                             )
                           ),
-                          IconButton(
-                            onPressed: () async {
-                                FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
-                                if (result != null) {
-                                  setState(() {
-                                    widget._mealPicture = File(result.files.single.path.toString());
-                                  });
-                                } else {
-                                  // User canceled the picker
-                                }
-                              },
-                            icon: const Icon(Icons.add_photo_alternate, color: Colors.white))
+                          widget._editMode ?
+                            IconButton(
+                              onPressed: () async {
+                                  FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+                                  if (result != null) {
+                                    setState(() {
+                                      widget._mealPicture = File(result.files.single.path.toString());
+                                    });
+                                  } else {
+                                    // User canceled the picker
+                                  }
+                                },
+                              icon: const Icon(Icons.add_photo_alternate, color: Colors.white)
+                            ) :
+                            Container()
                         ]
                       )
                     ),
@@ -80,7 +84,10 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             const Text('料理名：', textScaleFactor: 1.5),
-                            TextFormField(initialValue: widget._meal.name, onChanged: (text) {widget._meal.name = text;})
+                            TextFormField(
+                                initialValue: widget._meal.name,
+                                enabled: widget._editMode,
+                                onChanged: (text) {widget._meal.name = text;})
                           ],
                         )
                     ),
@@ -97,7 +104,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                                 setState(() {
                                   widget._meal.refUrls.add(MealRefUrl(url: ''));
                                 });
-                              }, icon: const Icon(Icons.add))]),
+                              }, icon: widget._editMode ? const Icon(Icons.add) : Container())]),
                           ListView.builder(
                             itemCount: widget._meal.refUrls.length,
                             physics: const NeverScrollableScrollPhysics(),
@@ -107,6 +114,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                                 decoration: const BoxDecoration(border: Border(bottom: BorderSide())),
                                 child: ListTile(
                                   title: TextFormField(
+                                    enabled: widget._editMode,
                                     initialValue: widget._meal.refUrls[index].url,
                                     onChanged: (text) {widget._meal.refUrls[index].url = text;}),
                                   trailing: IconButton(
@@ -133,7 +141,7 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                 )
               )
             ),
-            Container(
+            widget._editMode ? Container(
               padding: const EdgeInsets.all(10.0),
               child:
                 ElevatedButton(
@@ -142,10 +150,13 @@ class _MealInfoScreenState extends State<MealInfoScreen> {
                   ),
                   onPressed: () async {
                     await widget._mealBloc.saveMeal(widget._meal, newMealImage: widget._mealPicture);
+                    if (!mounted) return;
+                    Navigator.pop(context);
                   },
                   child: const Text('保存する'),
                 )
-            )
+            ) :
+            Container()
           ],
         )
       )

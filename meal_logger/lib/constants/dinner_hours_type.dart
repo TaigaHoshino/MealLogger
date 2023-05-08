@@ -8,11 +8,13 @@ enum DinnerHoursType {
 
   factory DinnerHoursType.intToDinnerHoursType(int value) {
     List<DinnerHoursType> enumValues = DinnerHoursType.values;
-    if (value >= 0 && value < enumValues.length) {
-      return enumValues[value];
+
+    for(final enumValue in enumValues) {
+      if(enumValue.value == value) {
+        return enumValue;
+      }
     }
-    else {
-      throw ArgumentError('Invalid value: $value');
-    }
+
+    throw ArgumentError('Invalid value: $value');
   }
 }

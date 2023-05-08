@@ -114,8 +114,9 @@ class _SelectMealForMenuScreenState extends State<SelectMealForMenuScreen>{
                 minimumSize: const Size.fromHeight(50), // fromHeight use double.infinity as width and 40 is the height
               ),
               onPressed: () async {
-                Navigator.pop(context);
                 await widget._menuBloc.addMealsToTodayMenu(widget._selectedMeals, widget._type);
+                if (!mounted) return;
+                Navigator.pop(context);
               },
               child: const Text('追加する'),
             )

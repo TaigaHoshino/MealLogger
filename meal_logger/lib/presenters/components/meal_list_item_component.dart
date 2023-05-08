@@ -49,6 +49,9 @@ class _MealListItemComponentState extends State<MealListItemComponent> {
           ),
           trailing: widget._trailingWidget,
           title: Text(widget._meal.name),
+          subtitle: widget._meal.elapsedDateFromLastCookedDate != -1 ?
+            Text('${widget._meal.elapsedDateFromLastCookedDate}日前') :
+            const Text('料理記録なし'),
           tileColor: widget._isSelected ? widget._selectedColor : null,
           onTap: () {
             widget._onTap?.call();

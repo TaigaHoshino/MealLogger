@@ -26,14 +26,12 @@ class _MealListScreenState extends State<MealListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Meal mealInit = Meal();
-
     return Scaffold(
       appBar: AppBar(title: const Text('料理リスト'),
         actions: <Widget>[
           IconButton(
             onPressed: (){
-              transitionToMealInfoScreen(mealInit);
+              transitionToMealInfoScreen(Meal());
             },
             icon: const Icon(Icons.add))]),
       body: StreamBuilder<LoadingState<List<Meal>>>(
@@ -105,7 +103,7 @@ class _MealListScreenState extends State<MealListScreen> {
   }
 
   void transitionToMealInfoScreen(Meal meal) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => MealInfoScreen(meal)))
+    Navigator.push(context, MaterialPageRoute(builder: (context) => MealInfoScreen(meal, editMode: true)))
         .then((value) async => await widget._mealBloc.getMeals());
   }
 }

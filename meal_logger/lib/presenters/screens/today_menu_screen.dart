@@ -8,6 +8,7 @@ import 'package:meal_logger/presenters/screens/select_meal_for_menu_screen.dart'
 import '../../constants/dinner_hours_type.dart';
 import '../../states/loading_state.dart';
 import '../components/meal_list_item_component.dart';
+import 'meal_info_screen.dart';
 
 class TodayMenuScreen extends StatefulWidget {
   final MenuBloc _menuBloc = GetIt.I<MenuBloc>();
@@ -29,56 +30,58 @@ class _TodayMenuScreenState extends State<TodayMenuScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('今日の献立')),
-      body: StreamBuilder<LoadingState<List<Menu>>>(
-        stream: widget._menuBloc.menuList,
-        builder: (context, snapshot) {
-          Widget component = const Text("");
-          if(!snapshot.hasData){
-            return component;
-          }
+      body: SingleChildScrollView(
+          child: StreamBuilder<LoadingState<List<Menu>>>(
+              stream: widget._menuBloc.menuList,
+              builder: (context, snapshot) {
+                Widget component = Container();
+                if(!snapshot.hasData){
+                  return component;
+                }
 
-          snapshot.data!.when(
-            loading: (_) => {},
-            completed: (content) {
-              final dinnerHoursTypeToMenu = <DinnerHoursType, Menu>{};
+                snapshot.data!.when(
+                    loading: (_) => {},
+                    completed: (content) {
+                      final dinnerHoursTypeToMenu = <DinnerHoursType, Menu>{};
 
-              for(final menu in content) {
-                dinnerHoursTypeToMenu.putIfAbsent(menu.dinnerHoursType, () => menu);
+                      for(final menu in content) {
+                        dinnerHoursTypeToMenu.putIfAbsent(menu.dinnerHoursType, () => menu);
+                      }
+
+                      component = Column(
+                          children: <Widget>[
+                            _MenuListExpansionTileComponent(
+                                '朝食',
+                                dinnerHoursTypeToMenu[DinnerHoursType.breakFast],
+                                    () => transitionToSelectMealForMenuScreen(
+                                    dinnerHoursTypeToMenu[DinnerHoursType.breakFast],
+                                    DinnerHoursType.breakFast)
+                            ),
+                            _MenuListExpansionTileComponent(
+                                '昼食',
+                                dinnerHoursTypeToMenu[DinnerHoursType.lunch],
+                                    () => transitionToSelectMealForMenuScreen(
+                                    dinnerHoursTypeToMenu[DinnerHoursType.lunch],
+                                    DinnerHoursType.lunch)
+                            ),
+                            _MenuListExpansionTileComponent(
+                                '夕食',
+                                dinnerHoursTypeToMenu[DinnerHoursType.dinner],
+                                    () => transitionToSelectMealForMenuScreen(
+                                    dinnerHoursTypeToMenu[DinnerHoursType.dinner],
+                                    DinnerHoursType.dinner)
+                            ),
+                          ]
+                      );
+                    },
+                    error: (exception) => {}
+                );
+
+                return component;
               }
-
-              component = Column(
-                children: <Widget>[
-                  _MenuListExpansionTileComponent(
-                    '朝食',
-                    dinnerHoursTypeToMenu[DinnerHoursType.breakFast],
-                    () => transitionToSelectMealForMenuScreen(
-                        dinnerHoursTypeToMenu[DinnerHoursType.breakFast],
-                        DinnerHoursType.breakFast)
-                  ),
-                  _MenuListExpansionTileComponent(
-                    '昼食',
-                    dinnerHoursTypeToMenu[DinnerHoursType.lunch],
-                    () => transitionToSelectMealForMenuScreen(
-                        dinnerHoursTypeToMenu[DinnerHoursType.lunch],
-                        DinnerHoursType.lunch)
-                  ),
-                  _MenuListExpansionTileComponent(
-                    '夕食',
-                    dinnerHoursTypeToMenu[DinnerHoursType.dinner],
-                    () => transitionToSelectMealForMenuScreen(
-                        dinnerHoursTypeToMenu[DinnerHoursType.dinner],
-                        DinnerHoursType.dinner)
-                  ),
-                ]
-              );
-            },
-            error: (exception) => {}
-          );
-
-          return component;
-        }
-      )
-    );
+          )
+        ),
+      );
   }
 
   void transitionToSelectMealForMenuScreen(Menu? menu, DinnerHoursType type) {
@@ -118,11 +121,13 @@ class _MenuListExpansionTileComponent extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
           child: ListView.builder(
               shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: _menu?.meals.length ?? 0,
               itemBuilder: (context, index) {
                 final meal = _menu!.meals.elementAt(index);
                 return MealListItemComponent(
                   meal,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MealInfoScreen(meal))),
                   trailingWidget:
                     IconButton(
                         icon: const Icon(Icons.delete),
