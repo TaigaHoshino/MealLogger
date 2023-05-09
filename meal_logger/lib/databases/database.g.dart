@@ -572,17 +572,8 @@ class $InclusionsInMenuTable extends InclusionsInMenu
       requiredDuringInsert: true,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES meals (id)'));
-  static const VerificationMeta _menuDinnerHoursTypeMeta =
-      const VerificationMeta('menuDinnerHoursType');
   @override
-  late final GeneratedColumn<int> menuDinnerHoursType = GeneratedColumn<int>(
-      'menu_dinner_hours_type', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES menus (dinner_hours_type)'));
-  @override
-  List<GeneratedColumn> get $columns => [menuId, mealId, menuDinnerHoursType];
+  List<GeneratedColumn> get $columns => [menuId, mealId];
   @override
   String get aliasedName => _alias ?? 'inclusions_in_menu';
   @override
@@ -604,19 +595,11 @@ class $InclusionsInMenuTable extends InclusionsInMenu
     } else if (isInserting) {
       context.missing(_mealIdMeta);
     }
-    if (data.containsKey('menu_dinner_hours_type')) {
-      context.handle(
-          _menuDinnerHoursTypeMeta,
-          menuDinnerHoursType.isAcceptableOrUnknown(
-              data['menu_dinner_hours_type']!, _menuDinnerHoursTypeMeta));
-    } else if (isInserting) {
-      context.missing(_menuDinnerHoursTypeMeta);
-    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {menuId, mealId, menuDinnerHoursType};
+  Set<GeneratedColumn> get $primaryKey => {menuId, mealId};
   @override
   InclusionInMenu map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -625,8 +608,6 @@ class $InclusionsInMenuTable extends InclusionsInMenu
           .read(DriftSqlType.int, data['${effectivePrefix}menu_id'])!,
       mealId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}meal_id'])!,
-      menuDinnerHoursType: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}menu_dinner_hours_type'])!,
     );
   }
 
@@ -639,17 +620,12 @@ class $InclusionsInMenuTable extends InclusionsInMenu
 class InclusionInMenu extends DataClass implements Insertable<InclusionInMenu> {
   final int menuId;
   final int mealId;
-  final int menuDinnerHoursType;
-  const InclusionInMenu(
-      {required this.menuId,
-      required this.mealId,
-      required this.menuDinnerHoursType});
+  const InclusionInMenu({required this.menuId, required this.mealId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['menu_id'] = Variable<int>(menuId);
     map['meal_id'] = Variable<int>(mealId);
-    map['menu_dinner_hours_type'] = Variable<int>(menuDinnerHoursType);
     return map;
   }
 
@@ -657,7 +633,6 @@ class InclusionInMenu extends DataClass implements Insertable<InclusionInMenu> {
     return InclusionsInMenuCompanion(
       menuId: Value(menuId),
       mealId: Value(mealId),
-      menuDinnerHoursType: Value(menuDinnerHoursType),
     );
   }
 
@@ -667,8 +642,6 @@ class InclusionInMenu extends DataClass implements Insertable<InclusionInMenu> {
     return InclusionInMenu(
       menuId: serializer.fromJson<int>(json['menuId']),
       mealId: serializer.fromJson<int>(json['mealId']),
-      menuDinnerHoursType:
-          serializer.fromJson<int>(json['menuDinnerHoursType']),
     );
   }
   @override
@@ -677,81 +650,64 @@ class InclusionInMenu extends DataClass implements Insertable<InclusionInMenu> {
     return <String, dynamic>{
       'menuId': serializer.toJson<int>(menuId),
       'mealId': serializer.toJson<int>(mealId),
-      'menuDinnerHoursType': serializer.toJson<int>(menuDinnerHoursType),
     };
   }
 
-  InclusionInMenu copyWith(
-          {int? menuId, int? mealId, int? menuDinnerHoursType}) =>
-      InclusionInMenu(
+  InclusionInMenu copyWith({int? menuId, int? mealId}) => InclusionInMenu(
         menuId: menuId ?? this.menuId,
         mealId: mealId ?? this.mealId,
-        menuDinnerHoursType: menuDinnerHoursType ?? this.menuDinnerHoursType,
       );
   @override
   String toString() {
     return (StringBuffer('InclusionInMenu(')
           ..write('menuId: $menuId, ')
-          ..write('mealId: $mealId, ')
-          ..write('menuDinnerHoursType: $menuDinnerHoursType')
+          ..write('mealId: $mealId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(menuId, mealId, menuDinnerHoursType);
+  int get hashCode => Object.hash(menuId, mealId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is InclusionInMenu &&
           other.menuId == this.menuId &&
-          other.mealId == this.mealId &&
-          other.menuDinnerHoursType == this.menuDinnerHoursType);
+          other.mealId == this.mealId);
 }
 
 class InclusionsInMenuCompanion extends UpdateCompanion<InclusionInMenu> {
   final Value<int> menuId;
   final Value<int> mealId;
-  final Value<int> menuDinnerHoursType;
   final Value<int> rowid;
   const InclusionsInMenuCompanion({
     this.menuId = const Value.absent(),
     this.mealId = const Value.absent(),
-    this.menuDinnerHoursType = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   InclusionsInMenuCompanion.insert({
     required int menuId,
     required int mealId,
-    required int menuDinnerHoursType,
     this.rowid = const Value.absent(),
   })  : menuId = Value(menuId),
-        mealId = Value(mealId),
-        menuDinnerHoursType = Value(menuDinnerHoursType);
+        mealId = Value(mealId);
   static Insertable<InclusionInMenu> custom({
     Expression<int>? menuId,
     Expression<int>? mealId,
-    Expression<int>? menuDinnerHoursType,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (menuId != null) 'menu_id': menuId,
       if (mealId != null) 'meal_id': mealId,
-      if (menuDinnerHoursType != null)
-        'menu_dinner_hours_type': menuDinnerHoursType,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   InclusionsInMenuCompanion copyWith(
-      {Value<int>? menuId,
-      Value<int>? mealId,
-      Value<int>? menuDinnerHoursType,
-      Value<int>? rowid}) {
+      {Value<int>? menuId, Value<int>? mealId, Value<int>? rowid}) {
     return InclusionsInMenuCompanion(
       menuId: menuId ?? this.menuId,
       mealId: mealId ?? this.mealId,
-      menuDinnerHoursType: menuDinnerHoursType ?? this.menuDinnerHoursType,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -765,9 +721,6 @@ class InclusionsInMenuCompanion extends UpdateCompanion<InclusionInMenu> {
     if (mealId.present) {
       map['meal_id'] = Variable<int>(mealId.value);
     }
-    if (menuDinnerHoursType.present) {
-      map['menu_dinner_hours_type'] = Variable<int>(menuDinnerHoursType.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -779,7 +732,6 @@ class InclusionsInMenuCompanion extends UpdateCompanion<InclusionInMenu> {
     return (StringBuffer('InclusionsInMenuCompanion(')
           ..write('menuId: $menuId, ')
           ..write('mealId: $mealId, ')
-          ..write('menuDinnerHoursType: $menuDinnerHoursType, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();

@@ -36,10 +36,9 @@ class Meals extends Table {
 class InclusionsInMenu extends Table {
   IntColumn get menuId => integer().references(Menus, #id)();
   IntColumn get mealId => integer().references(Meals, #id)();
-  IntColumn get menuDinnerHoursType => integer().references(Menus, #dinnerHoursType)();
 
   @override
-  Set<Column> get primaryKey => {menuId, mealId, menuDinnerHoursType};
+  Set<Column> get primaryKey => {menuId, mealId};
 }
 
 class MealRefUrls extends Table {
@@ -183,8 +182,7 @@ class Database extends _$Database {
       await into(inclusionsInMenu).insert(
         InclusionsInMenuCompanion(
           menuId: Value(menuId),
-          mealId: Value(meal.id!),
-          menuDinnerHoursType: Value(type.value)
+          mealId: Value(meal.id!)
         )
       );
     }
@@ -214,46 +212,20 @@ class Database extends _$Database {
       ));
     }
 
-    List<int> menuIds = [];
-
-    for(final menu in menuList) {
-      menuIds.add(menu.id!);
-    }
-
     final query = select(inclusionsInMenu).join(
       [
         leftOuterJoin(
           meals,
           meals.id.equalsExp(inclusionsInMenu.mealId)
         ),
-        leftOuterJoin(
-          mealRefUrls,
-          mealRefUrls.mealId.equalsExp(inclusionsInMenu.mealId)
-        )
       ]
-    )..where(inclusionsInMenu.menuId.isIn(menuIds));
+    )..where(inclusionsInMenu.menuId.isIn(menuList.map((menu) => menu.id!).toList()));
 
     final menuIdToMeals = <int, List<dto.Meal>>{};
     final idToMeal = <int, dto.Meal>{};
     final mealIdToRefUrls = <int, List<dto.MealRefUrl>>{};
 
-    for(final refUrlEntity in await query.map((row) => row.readTableOrNull(mealRefUrls)).get()) {
-      if(refUrlEntity == null) {
-        continue;
-      }
-      mealIdToRefUrls.putIfAbsent(refUrlEntity.mealId, () => []).add(
-        dto.MealRefUrl(id: refUrlEntity.id, url: refUrlEntity.url)
-      );
-    }
-
-    for(final joinedEntity in await query.get()) {
-      final inclusion = joinedEntity.readTable(inclusionsInMenu);
-      final mealEntity = joinedEntity.readTable(meals);
-
-      if(idToMeal.containsKey(mealEntity.id)) {
-        continue;
-      }
-
+    for(final mealEntity in await query.map((row) => row.readTable(meals)).get()) {
       idToMeal.putIfAbsent(mealEntity.id, () =>
         dto.Meal(
           id: mealEntity.id,
@@ -264,8 +236,16 @@ class Database extends _$Database {
           imagePathInAppDoc: mealEntity.imagePathInAppDoc
         )
       );
+    }
 
-      menuIdToMeals.putIfAbsent(inclusion.menuId, () => []).add(idToMeal[mealEntity.id]!);
+    for(final refUrlEntity in
+      await (select(mealRefUrls)..where((tbl) => tbl.mealId.isIn(idToMeal.keys.toList()))).get()) {
+      idToMeal[refUrlEntity.mealId]!.refUrls.add(
+        dto.MealRefUrl(id: refUrlEntity.id, url: refUrlEntity.url));
+    }
+
+    for(final inclusionEntity in await query.map((row) => row.readTable(inclusionsInMenu)).get()) {
+      menuIdToMeals.putIfAbsent(inclusionEntity.menuId, () => []).add(idToMeal[inclusionEntity.mealId]!);
     }
 
     for(final menu in menuList) {
