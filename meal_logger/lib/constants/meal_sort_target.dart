@@ -1,0 +1,4 @@
+enum MealSortTarget {
+  createDate,
+  cookedDate
+}

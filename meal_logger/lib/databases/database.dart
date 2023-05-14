@@ -3,7 +3,10 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:meal_logger/constants/dinner_hours_type.dart';
+import 'package:meal_logger/dtos/meal_search_and_sort.dart';
 import 'package:path/path.dart' as p;
+import '../constants/meal_sort_target.dart';
+import '../constants/sort_order.dart';
 import '../dtos/meal.dart' as dto;
 import '../dtos/meal_ref_url.dart' as dto;
 import '../dtos/menu.dart' as dto;
@@ -106,7 +109,7 @@ class Database extends _$Database {
     return mealId;
   }
 
-  Future<List<dto.Meal>> getMeals({List<int>? ids}) async {
+  Future<List<dto.Meal>> getMeals({List<int>? ids, MealSearchAndSort? searchAndSort}) async {
     final query = select(meals).join(
       [
        leftOuterJoin(
@@ -117,6 +120,35 @@ class Database extends _$Database {
 
     if(ids != null && ids.isNotEmpty) {
       query.where(meals.id.isIn(ids));
+    }
+
+    if(searchAndSort != null) {
+      for(final keyword in searchAndSort.keywordsForTitle){
+        query.where(meals.name.like("%$keyword%"));
+      }
+
+      List<OrderingTerm> orderingTerms = [];
+
+      for(final sortTarget in searchAndSort.sortTargetToOrder.keys) {
+        if(sortTarget == MealSortTarget.createDate) {
+          orderingTerms.add(
+            OrderingTerm(
+              expression: meals.createdAt,
+              mode: _SortOrderToOrderingMode(searchAndSort.sortTargetToOrder[sortTarget]!)
+            )
+          );
+        }
+        else if(sortTarget == MealSortTarget.cookedDate) {
+          orderingTerms.add(
+            OrderingTerm(
+              expression: meals.lastCookedDate,
+              mode: _SortOrderToOrderingMode(searchAndSort.sortTargetToOrder[sortTarget]!)
+            )
+          );
+        }
+      }
+
+      query.orderBy(orderingTerms);
     }
 
     final idToMeal = <int, dto.Meal>{};
@@ -253,6 +285,14 @@ class Database extends _$Database {
     }
 
     return menuList;
+  }
+
+  OrderingMode _SortOrderToOrderingMode(SortOrder sortOrder) {
+    if(sortOrder == SortOrder.ascending) {
+      return OrderingMode.asc;
+    }
+
+    return OrderingMode.desc;
   }
 }
 

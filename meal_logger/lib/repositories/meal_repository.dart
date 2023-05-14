@@ -6,6 +6,8 @@ import '../databases/database.dart';
 import '../dtos/meal.dart' as dto;
 import 'package:path/path.dart';
 
+import '../dtos/meal_search_and_sort.dart';
+
 class MealRepository {
   final Database _database;
 
@@ -28,8 +30,8 @@ class MealRepository {
     return (await _database.getMeals(ids: [id])).first;
   }
 
-  Future<List<dto.Meal>> getMeals() async {
-    final meals = await _database.getMeals();
+  Future<List<dto.Meal>> getMeals({MealSearchAndSort? searchAndSort}) async {
+    final meals = await _database.getMeals(searchAndSort: searchAndSort);
     for(final meal in meals) {
       if(meal.imagePathInAppDoc.isNotEmpty) {
         meal.imageFullPath = (await getApplicationDocumentsDirectory()).path + meal.imagePathInAppDoc;

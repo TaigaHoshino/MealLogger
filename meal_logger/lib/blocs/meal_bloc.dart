@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:meal_logger/dtos/meal_search_and_sort.dart';
 import 'package:meal_logger/repositories/meal_repository.dart';
 import 'package:meal_logger/states/loading_state.dart';
 import 'package:rxdart/rxdart.dart';
@@ -36,11 +37,11 @@ class MealBloc {
     }
   }
 
-  Future<void> getMeals() async {
+  Future<void> getMeals({MealSearchAndSort? searchAndSort}) async {
     _mealListController.sink.add(const LoadingState.loading(null));
 
     try {
-      final results = await _mealRepository.getMeals();
+      final results = await _mealRepository.getMeals(searchAndSort: searchAndSort);
       _mealListController.sink.add(LoadingState.completed(results));
     }
     on Exception catch (e){

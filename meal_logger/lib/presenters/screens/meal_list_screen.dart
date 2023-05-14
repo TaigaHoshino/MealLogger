@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:meal_logger/dtos/meal_search_and_sort.dart';
 import 'package:meal_logger/presenters/components/meal_list_item_component.dart';
+import 'package:meal_logger/presenters/components/meal_search_and_sort_component.dart';
 
 import '../../blocs/meal_bloc.dart';
 import '../../dtos/meal.dart';
@@ -18,6 +20,8 @@ class MealListScreen extends StatefulWidget {
 }
 
 class _MealListScreenState extends State<MealListScreen> {
+  final _mealSearchAndSort = MealSearchAndSort();
+
   @override
   void initState() {
     super.initState();
@@ -31,9 +35,22 @@ class _MealListScreenState extends State<MealListScreen> {
         actions: <Widget>[
           IconButton(
             onPressed: (){
+              showModalBottomSheet(
+                isScrollControlled: true,
+                context: context,
+                builder: (builder) {
+                  return MealSearchAndSortComponent(_mealSearchAndSort);
+                });
+            },
+            icon: const Icon(Icons.search)
+          ),
+          IconButton(
+            onPressed: (){
               transitionToMealInfoScreen(Meal());
             },
-            icon: const Icon(Icons.add))]),
+            icon: const Icon(Icons.add)
+          ),
+        ]),
       body: StreamBuilder<LoadingState<List<Meal>>>(
         stream: widget._mealBloc.mealList,
         builder: (context, snapshot){
