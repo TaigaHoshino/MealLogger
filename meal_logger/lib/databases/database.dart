@@ -65,8 +65,8 @@ class Database extends _$Database {
     final mealCompanion = MealsCompanion(
       id: meal.id != null ? Value(meal.id!) : const Value.absent(),
       name: Value(meal.name),
-      imagePathInAppDoc: imagePathInAppDoc != null ? Value(imagePathInAppDoc!) : const Value.absent(),
-      lastCookedDate: Value(meal.lastCookedDate),
+      imagePathInAppDoc: imagePathInAppDoc != null ? Value(imagePathInAppDoc) : const Value.absent(),
+      lastCookedDate: meal.lastCookedDate != null ? Value(_dateTimeToDate(meal.lastCookedDate!)) : const Value(null),
       createdAt: meal.id == null ? Value(DateTime.now()) : const Value.absent()
     );
 
@@ -134,7 +134,7 @@ class Database extends _$Database {
           orderingTerms.add(
             OrderingTerm(
               expression: meals.createdAt,
-              mode: _SortOrderToOrderingMode(searchAndSort.sortTargetToOrder[sortTarget]!)
+              mode: _sortOrderToOrderingMode(searchAndSort.sortTargetToOrder[sortTarget]!)
             )
           );
         }
@@ -142,7 +142,7 @@ class Database extends _$Database {
           orderingTerms.add(
             OrderingTerm(
               expression: meals.lastCookedDate,
-              mode: _SortOrderToOrderingMode(searchAndSort.sortTargetToOrder[sortTarget]!)
+              mode: _sortOrderToOrderingMode(searchAndSort.sortTargetToOrder[sortTarget]!)
             )
           );
         }
@@ -225,12 +225,19 @@ class Database extends _$Database {
       ..where((tbl) => tbl.menuId.equals(menu.id!) & tbl.mealId.equals(meal.id!))).go();
   }
 
-  Future<List<dto.Menu>> getMenus({DateTime? cookedDate}) async {
+  Future<List<dto.Menu>> getMenus({DateTime? cookedDate, DateTime? from, DateTime? to}) async {
     final menuQuery = select(menus);
 
     if(cookedDate != null) {
       menuQuery.where((tbl) =>
-          tbl.cookedDate.equals(DateTime(cookedDate.year, cookedDate.month, cookedDate.day)));
+        tbl.cookedDate.equals(_dateTimeToDate(cookedDate)));
+    }
+
+    if(from != null) {
+      menuQuery.where((tbl) =>
+        tbl.cookedDate.isBetweenValues(
+          _dateTimeToDate(from),
+          _dateTimeToDate(to ?? DateTime.now())));
     }
 
     List<dto.Menu> menuList = [];
@@ -287,7 +294,11 @@ class Database extends _$Database {
     return menuList;
   }
 
-  OrderingMode _SortOrderToOrderingMode(SortOrder sortOrder) {
+  DateTime _dateTimeToDate(DateTime dateTime) {
+    return DateTime(dateTime.year, dateTime.month, dateTime.day);
+  }
+
+  OrderingMode _sortOrderToOrderingMode(SortOrder sortOrder) {
     if(sortOrder == SortOrder.ascending) {
       return OrderingMode.asc;
     }

@@ -8,10 +8,15 @@ import 'package:meal_logger/repositories/menu_repository.dart';
 
 import 'blocs/menu_bloc.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   final database = Database();
+  final menuBloc = MenuRepository(database);
+  await menuBloc.init();
   GetIt.I.registerSingleton(MealBloc(MealRepository(database)));
-  GetIt.I.registerSingleton(MenuBloc(MenuRepository(database)));
+  GetIt.I.registerSingleton(MenuBloc(menuBloc));
+
   runApp(const MealLoggerApp());
 }
 

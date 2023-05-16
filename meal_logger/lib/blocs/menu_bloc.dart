@@ -15,11 +15,15 @@ class MenuBloc {
 
   final _menuListController = BehaviorSubject<LoadingState<List<Menu>>>.seeded(const LoadingState.completed([]));
 
+  final _determineMenuIfDateIsChangedController = BehaviorSubject<LoadingState<bool>>();
+
   Stream<LoadingState<void>> get onAddMealToTodayMenuProgress => _addMealsToTodayMenuController.stream;
 
   Stream<LoadingState<void>> get onRemoveMealFromTodayMenuProgress => _removeMealFromTodayMenuController.stream;
 
   Stream<LoadingState<List<Menu>>> get menuList => _menuListController.stream;
+
+  Stream<LoadingState<bool>> get onDetermineMenuIfDateIsChangedProgress => _determineMenuIfDateIsChangedController.stream;
 
   MenuBloc(this._menuRepository);
 
@@ -71,6 +75,23 @@ class MenuBloc {
     catch (e) {
       print(e);
       _menuListController.sink.add(LoadingState.error(Exception('Unexpected error is occurred')));
+    }
+  }
+
+  Future<void> determineMenuIfDateIsChanged() async {
+    _determineMenuIfDateIsChangedController.sink.add(const LoadingState.loading(null));
+
+    try {
+      bool result = await _menuRepository.determineMenuIfDateIsChanged();
+      _determineMenuIfDateIsChangedController.sink.add(LoadingState.completed(result));
+    }
+    on Exception catch (e){
+      print(e);
+      _determineMenuIfDateIsChangedController.sink.add(LoadingState.error(e));
+    }
+    catch (e) {
+      print(e);
+      _determineMenuIfDateIsChangedController.sink.add(LoadingState.error(Exception('Unexpected error is occurred')));
     }
   }
 }
